@@ -21,6 +21,12 @@ export const ZentraColors = {
   inputBackground: '#141414',
   inputBorder: '#2A2A2A',
   inputPlaceholder: '#555555',
+  card: '#141414',
+  cardBorder: '#1F1F1F',
+  surface: '#111111',
+  danger: '#EF4444',
+  success: '#22C55E',
+  muted: '#6B7280',
 } as const;
 
 export const ZentraTypography = {

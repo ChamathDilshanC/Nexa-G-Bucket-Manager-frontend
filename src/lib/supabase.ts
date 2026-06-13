@@ -1,29 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 import { config } from '@/lib/config';
+import { getSecureItem, removeSecureItem, setSecureItem } from '@/lib/secure-storage';
 
 const storage = {
   getItem: (key: string) => {
     if (Platform.OS === 'web') {
       return localStorage.getItem(key);
     }
-    return SecureStore.getItemAsync(key);
+    return getSecureItem(key);
   },
   setItem: (key: string, value: string) => {
     if (Platform.OS === 'web') {
       localStorage.setItem(key, value);
       return Promise.resolve();
     }
-    return SecureStore.setItemAsync(key, value);
+    return setSecureItem(key, value);
   },
   removeItem: (key: string) => {
     if (Platform.OS === 'web') {
       localStorage.removeItem(key);
       return Promise.resolve();
     }
-    return SecureStore.deleteItemAsync(key);
+    return removeSecureItem(key);
   },
 };
 

@@ -10,10 +10,12 @@ import { AuthGoogleButton } from '@/components/auth/auth-google-button';
 import { AuthInput } from '@/components/auth/auth-input';
 import { AuthScreenLayout } from '@/components/auth/auth-screen-layout';
 import { ZentraColors } from '@/constants/zentra-theme';
+import { useAuth } from '@/contexts/auth-context';
 import { signInWithGoogle, signUpWithEmail } from '@/services/auth';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { onAuthSuccess } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -26,7 +28,7 @@ export default function RegisterScreen() {
       setLoading(true);
       setError(null);
       await signUpWithEmail(email.trim(), password, firstName.trim(), lastName.trim());
-      router.replace('/(tabs)/explore');
+      await onAuthSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed.');
     } finally {
@@ -39,7 +41,7 @@ export default function RegisterScreen() {
       setLoading(true);
       setError(null);
       await signInWithGoogle();
-      router.replace('/(tabs)/explore');
+      await onAuthSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign in failed.');
     } finally {

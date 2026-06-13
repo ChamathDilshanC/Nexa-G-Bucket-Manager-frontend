@@ -5,10 +5,10 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { ZentraColors } from '@/constants/zentra-theme';
+import { AuthProvider } from '@/contexts/auth-context';
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -20,7 +20,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => undefined);
     }
   }, [fontsLoaded]);
 
@@ -29,8 +29,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <AnimatedSplashOverlay />
+    <AuthProvider>
       <Stack
         screenOptions={{
           headerShown: false,
@@ -40,8 +39,9 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
+        <Stack.Screen name="bucket/[name]" />
         <Stack.Screen name="(tabs)" />
       </Stack>
-    </>
+    </AuthProvider>
   );
 }

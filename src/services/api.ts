@@ -1,5 +1,9 @@
 import { config } from '@/lib/config';
 import type { StoredSession } from '@/lib/session';
+import { authFetch } from '@/services/api-client';
+import type { AuthUserProfile } from '@/types/bucket';
+
+export { ApiError } from '@/lib/api-error';
 
 export type AuthSessionResponse = {
   access_token: string;
@@ -13,15 +17,6 @@ export type GoogleAuthResponse = {
   provider: string;
   url: string;
 };
-
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-  ) {
-    super(message);
-  }
-}
 
 async function parseError(response: Response) {
   try {
@@ -76,16 +71,8 @@ export async function refreshAuthSession(refreshToken: string) {
   return (await response.json()) as AuthSessionResponse;
 }
 
-export async function getAuthenticatedUser(accessToken: string) {
-  const response = await fetch(`${config.apiBaseUrl}/auth/me`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (!response.ok) {
-    throw new ApiError(await parseError(response), response.status);
-  }
-
-  return response.json();
+export async function getAuthenticatedUser() {
+  return authFetch<AuthUserProfile>('/auth/me');
 }
 
 export function toStoredSession(session: AuthSessionResponse): StoredSession {
@@ -93,6 +80,7 @@ export function toStoredSession(session: AuthSessionResponse): StoredSession {
     access_token: session.access_token,
     refresh_token: session.refresh_token,
     expires_in: session.expires_in,
+    expires_at: null,
     user: session.user,
   };
 }

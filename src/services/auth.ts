@@ -2,11 +2,20 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 
 import { assertAuthConfig } from '@/lib/config';
-import { saveSession } from '@/lib/session';
+import { isAccessTokenExpired } from '@/lib/jwt';
+import { withTimeout } from '@/lib/timeout';
+import {
+  clearSession,
+  getStoredSession,
+  saveSession,
+  type StoredSession,
+} from '@/lib/session';
+import { signOutEverywhere } from '@/lib/sign-out';
 import { supabase } from '@/lib/supabase';
 import {
   exchangeGoogleCode,
   getGoogleAuthUrl,
+  refreshAuthSession,
   toStoredSession,
 } from '@/services/api';
 
@@ -22,6 +31,65 @@ function extractCodeFromUrl(url: string) {
   return typeof code === 'string' ? code : null;
 }
 
+function toStoredSessionFromSupabase(session: {
+  access_token: string;
+  refresh_token: string;
+  expires_in?: number;
+  user: { id: string; email?: string | null };
+}): StoredSession {
+  return {
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    expires_in: session.expires_in ?? null,
+    expires_at: null,
+    user: {
+      id: session.user.id,
+      email: session.user.email ?? null,
+    },
+  };
+}
+
+export async function refreshStoredSession() {
+  const refreshToken = await getStoredSession().then((session) => session?.refresh_token);
+  if (!refreshToken) {
+    throw new Error('Session expired.');
+  }
+
+  try {
+    const session = await refreshAuthSession(refreshToken);
+    const stored = toStoredSession(session);
+    await saveSession(stored);
+    return stored;
+  } catch {
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+    if (error || !data.session) {
+      throw new Error('Session expired.');
+    }
+
+    const stored = toStoredSessionFromSupabase(data.session);
+    await saveSession(stored);
+    return stored;
+  }
+}
+
+export async function restoreStoredSession() {
+  const session = await getStoredSession();
+  if (!session?.access_token) return null;
+
+  if (isAccessTokenExpired(session.expires_at)) {
+    try {
+      return await withTimeout(refreshStoredSession(), 12_000, 'Session refresh timed out.');
+    } catch {
+      await signOutEverywhere();
+      return null;
+    }
+  }
+
+  return session;
+}
+
+export { signOutEverywhere } from '@/lib/sign-out';
+
 export async function signInWithEmail(email: string, password: string) {
   assertAuthConfig();
 
@@ -29,17 +97,9 @@ export async function signInWithEmail(email: string, password: string) {
   if (error) throw new Error(error.message);
   if (!data.session) throw new Error('No session returned from Supabase.');
 
-  await saveSession({
-    access_token: data.session.access_token,
-    refresh_token: data.session.refresh_token,
-    expires_in: data.session.expires_in ?? null,
-    user: {
-      id: data.session.user.id,
-      email: data.session.user.email ?? null,
-    },
-  });
-
-  return data.session;
+  const stored = toStoredSessionFromSupabase(data.session);
+  await saveSession(stored);
+  return stored;
 }
 
 export async function signUpWithEmail(
@@ -66,17 +126,9 @@ export async function signUpWithEmail(
     throw new Error('Check your email to confirm your account, then sign in.');
   }
 
-  await saveSession({
-    access_token: data.session.access_token,
-    refresh_token: data.session.refresh_token,
-    expires_in: data.session.expires_in ?? null,
-    user: {
-      id: data.session.user.id,
-      email: data.session.user.email ?? null,
-    },
-  });
-
-  return data.session;
+  const stored = toStoredSessionFromSupabase(data.session);
+  await saveSession(stored);
+  return stored;
 }
 
 export async function signInWithGoogle() {
@@ -94,6 +146,7 @@ export async function signInWithGoogle() {
   }
 
   const session = await exchangeGoogleCode(code);
-  await saveSession(toStoredSession(session));
-  return session;
+  const stored = toStoredSession(session);
+  await saveSession(stored);
+  return stored;
 }

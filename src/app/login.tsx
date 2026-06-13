@@ -10,10 +10,12 @@ import { AuthGoogleButton } from '@/components/auth/auth-google-button';
 import { AuthInput } from '@/components/auth/auth-input';
 import { AuthScreenLayout } from '@/components/auth/auth-screen-layout';
 import { ZentraColors } from '@/constants/zentra-theme';
+import { useAuth } from '@/contexts/auth-context';
 import { signInWithEmail, signInWithGoogle } from '@/services/auth';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { onAuthSuccess } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export default function LoginScreen() {
       setLoading(true);
       setError(null);
       await signInWithEmail(email.trim(), password);
-      router.replace('/(tabs)/explore');
+      await onAuthSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed.');
     } finally {
@@ -37,7 +39,7 @@ export default function LoginScreen() {
       setLoading(true);
       setError(null);
       await signInWithGoogle();
-      router.replace('/(tabs)/explore');
+      await onAuthSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign in failed.');
     } finally {
