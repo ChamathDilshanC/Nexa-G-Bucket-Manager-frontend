@@ -1,9 +1,10 @@
+import { ApiError } from '@/lib/api-error';
 import { config } from '@/lib/config';
 import type { StoredSession } from '@/lib/session';
 import { authFetch } from '@/services/api-client';
 import type { AuthUserProfile } from '@/types/bucket';
 
-export { ApiError } from '@/lib/api-error';
+export { ApiError };
 
 export type AuthSessionResponse = {
   access_token: string;
