@@ -1,16 +1,18 @@
 import { Tabs } from 'expo-router';
 
 import { GlassTabBar } from '@/components/navigation/glass-tab-bar';
-import { ZentraColors } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 export default function TabLayout() {
+  const colors = useThemeColors();
+
   return (
     <Tabs
       tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: ZentraColors.accent,
-        tabBarInactiveTintColor: ZentraColors.body,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.body,
         tabBarStyle: {
           position: 'absolute',
           height: 0,
@@ -21,13 +23,19 @@ export default function TabLayout() {
           shadowOpacity: 0,
         },
         sceneStyle: {
-          backgroundColor: ZentraColors.background,
+          backgroundColor: colors.background,
         },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Dashboard',
+        }}
+      />
+      <Tabs.Screen
+        name="shared"
+        options={{
+          title: 'Shared',
         }}
       />
       <Tabs.Screen

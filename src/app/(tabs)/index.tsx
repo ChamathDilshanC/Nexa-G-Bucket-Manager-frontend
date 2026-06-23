@@ -16,10 +16,13 @@ import { BucketFormModal } from '@/components/dashboard/bucket-form-modal';
 import { EmptyState, ErrorBanner, LoadingState } from '@/components/dashboard/empty-state';
 import { AppScreen, ScreenHeader } from '@/components/dashboard/screen-header';
 import { SectionTitle } from '@/components/dashboard/section-title';
+import { ShareSheetModal } from '@/components/share/share-sheet-modal';
+import { AppIcons } from '@/components/ui/app-icon';
 import { useGlassTabBarInset } from '@/components/navigation/glass-tab-bar';
 import { useAuth } from '@/contexts/auth-context';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout } from '@/constants/zentra-theme';
+import { ZentraLayout } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 import {
   getCachedBuckets,
   invalidateBucketsCache,
@@ -74,7 +77,9 @@ export default function DashboardScreen() {
   const [formPublic, setFormPublic] = useState(false);
   const [formMimeTypes, setFormMimeTypes] = useState<string[]>([...ALLOWED_MIME_TYPES]);
   const [submitting, setSubmitting] = useState(false);
+  const [shareBucket, setShareBucket] = useState<Bucket | null>(null);
   const tabBarInset = useGlassTabBarInset();
+  const colors = useThemeColors();
 
   const loadBuckets = useCallback(async (isRefresh = false) => {
     if (!isAuthenticated || isLoading) return;
@@ -203,9 +208,9 @@ export default function DashboardScreen() {
   }
 
   function showBucketActions(bucket: Bucket) {
-    const options = ['Open files', 'Edit settings', 'Delete bucket', 'Cancel'];
-    const destructiveButtonIndex = 2;
-    const cancelButtonIndex = 3;
+    const options = ['Open files', 'Share', 'Edit settings', 'Delete bucket', 'Cancel'];
+    const destructiveButtonIndex = 3;
+    const cancelButtonIndex = 4;
 
     const onSelect = (index: number) => {
       if (index === 0) {
@@ -214,8 +219,10 @@ export default function DashboardScreen() {
           params: { name: bucket.name, displayName: bucket.display_name },
         });
       } else if (index === 1) {
-        openEditModal(bucket);
+        setShareBucket(bucket);
       } else if (index === 2) {
+        openEditModal(bucket);
+      } else if (index === 3) {
         confirmDeleteBucket(bucket);
       }
     };
@@ -230,8 +237,9 @@ export default function DashboardScreen() {
 
     Alert.alert(bucket.display_name, 'Choose an action', [
       { text: 'Open files', onPress: () => onSelect(0) },
-      { text: 'Edit settings', onPress: () => onSelect(1) },
-      { text: 'Delete bucket', style: 'destructive', onPress: () => onSelect(2) },
+      { text: 'Share', onPress: () => onSelect(1) },
+      { text: 'Edit settings', onPress: () => onSelect(2) },
+      { text: 'Delete bucket', style: 'destructive', onPress: () => onSelect(3) },
       { text: 'Cancel', style: 'cancel' },
     ]);
   }
@@ -244,12 +252,12 @@ export default function DashboardScreen() {
         <Pressable
           onPress={openCreateModal}
           style={{
-            backgroundColor: ZentraColors.accent,
+            backgroundColor: colors.accent,
             borderRadius: 999,
             paddingHorizontal: 14,
             paddingVertical: 10,
           }}>
-          <Text style={{ fontFamily: Fonts.semibold, fontSize: 14, color: ZentraColors.title }}>+ New</Text>
+          <Text style={{ fontFamily: Fonts.semibold, fontSize: 14, color: '#FFFFFF' }}>+ New</Text>
         </Pressable>
       }
     />
@@ -274,7 +282,7 @@ export default function DashboardScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={() => loadBuckets(true)}
-                tintColor={ZentraColors.accent}
+                tintColor={colors.accent}
               />
             }
             contentContainerStyle={{ paddingBottom: tabBarInset, flexGrow: buckets.length ? 0 : 1 }}
@@ -291,7 +299,7 @@ export default function DashboardScreen() {
               <EmptyState
                 title="No buckets yet"
                 description="Create your first bucket to start uploading and organizing files."
-                emoji="☁️"
+                icon={AppIcons.cloud}
               />
             }
             renderItem={({ item }) => (
@@ -304,6 +312,7 @@ export default function DashboardScreen() {
                     params: { name: item.name, displayName: item.display_name },
                   })
                 }
+                onShare={() => setShareBucket(item)}
                 onLongPress={() => showBucketActions(item)}
               />
             )}
@@ -341,6 +350,16 @@ export default function DashboardScreen() {
         onClose={() => setEditBucket(null)}
         onSubmit={handleUpdateBucket}
       />
+
+      {shareBucket ? (
+        <ShareSheetModal
+          visible
+          bucketName={shareBucket.name}
+          displayName={shareBucket.display_name}
+          ownerEmail={user?.email}
+          onClose={() => setShareBucket(null)}
+        />
+      ) : null}
     </AppScreen>
   );
 }

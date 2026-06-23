@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -16,7 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthButton } from '@/components/auth/auth-button';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout } from '@/constants/zentra-theme';
+import { ZentraLayout, type ThemePalette } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 import { ALLOWED_MIME_TYPES } from '@/types/bucket';
 
 type BucketFormModalProps = {
@@ -51,6 +52,8 @@ export function BucketFormModal({
   onSubmit,
 }: BucketFormModalProps) {
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
@@ -103,7 +106,7 @@ export function BucketFormModal({
                 onChangeText={onChangeName}
                 editable={nameEditable && !loading}
                 placeholder="eg. photos"
-                placeholderTextColor={ZentraColors.inputPlaceholder}
+                placeholderTextColor={colors.inputPlaceholder}
                 autoCapitalize="none"
                 returnKeyType="done"
                 style={[styles.input, !nameEditable && styles.inputDisabled]}
@@ -120,8 +123,8 @@ export function BucketFormModal({
                   value={isPublic}
                   onValueChange={onChangePublic}
                   disabled={loading}
-                  trackColor={{ false: ZentraColors.inputBorder, true: ZentraColors.accent }}
-                  thumbColor={ZentraColors.title}
+                  trackColor={{ false: colors.inputBorder, true: colors.accent }}
+                  thumbColor={colors.title}
                 />
               </View>
             </View>
@@ -158,28 +161,29 @@ export function BucketFormModal({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemePalette) {
+  return StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: colors.overlay,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: ZentraColors.background,
+    backgroundColor: colors.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: ZentraLayout.horizontalPadding,
     paddingTop: 24,
     paddingBottom: 8,
     borderTopWidth: 1,
-    borderColor: ZentraColors.cardBorder,
+    borderColor: colors.cardBorder,
   },
   headerRow: {
     flexDirection: 'row',
@@ -191,13 +195,13 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: 22,
     lineHeight: 28,
-    color: ZentraColors.title,
+    color: colors.title,
   },
   closeText: {
     fontFamily: Fonts.medium,
     fontSize: 16,
     lineHeight: 22,
-    color: ZentraColors.body,
+    color: colors.body,
   },
   section: {
     marginBottom: 24,
@@ -206,28 +210,28 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     fontSize: 14,
     lineHeight: 20,
-    color: ZentraColors.body,
+    color: colors.body,
     marginBottom: 10,
   },
   input: {
-    backgroundColor: ZentraColors.inputBackground,
+    backgroundColor: colors.inputBackground,
     borderWidth: 1,
-    borderColor: ZentraColors.inputBorder,
+    borderColor: colors.inputBorder,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontFamily: Fonts.regular,
     fontSize: 16,
     lineHeight: 22,
-    color: ZentraColors.title,
+    color: colors.title,
   },
   inputDisabled: {
     opacity: 0.6,
   },
   card: {
-    backgroundColor: ZentraColors.card,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: ZentraColors.cardBorder,
+    borderColor: colors.cardBorder,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -246,13 +250,13 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     fontSize: 15,
     lineHeight: 22,
-    color: ZentraColors.title,
+    color: colors.title,
   },
   cardBody: {
     fontFamily: Fonts.regular,
     fontSize: 13,
     lineHeight: 18,
-    color: ZentraColors.body,
+    color: colors.body,
     marginTop: 6,
   },
   chipRow: {
@@ -264,26 +268,28 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: ZentraColors.card,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: ZentraColors.cardBorder,
+    borderColor: colors.cardBorder,
     marginBottom: 10,
   },
   chipSpaced: {
     marginRight: 10,
   },
   chipSelected: {
-    backgroundColor: ZentraColors.accent,
-    borderColor: ZentraColors.accent,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   chipText: {
     fontFamily: Fonts.medium,
     fontSize: 12,
     lineHeight: 16,
-    color: ZentraColors.title,
+    color: colors.title,
   },
   submitWrap: {
     marginTop: 8,
     marginBottom: 8,
   },
-});
+  });
+}
+

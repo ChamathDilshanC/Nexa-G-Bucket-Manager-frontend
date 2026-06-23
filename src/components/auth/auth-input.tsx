@@ -1,13 +1,16 @@
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraTypography } from '@/constants/zentra-theme';
+import { ZentraTypography } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 type AuthInputProps = TextInputProps & {
   label: string;
 };
 
 export function AuthInput({ label, ...props }: AuthInputProps) {
+  const colors = useThemeColors();
+
   return (
     <View className="mb-4">
       <Text
@@ -15,23 +18,23 @@ export function AuthInput({ label, ...props }: AuthInputProps) {
           fontFamily: Fonts.medium,
           fontSize: ZentraTypography.body.fontSize,
           lineHeight: ZentraTypography.body.lineHeight,
-          color: ZentraColors.title,
+          color: colors.title,
           marginBottom: 8,
         }}>
         {label}
       </Text>
       <TextInput
-        placeholderTextColor={ZentraColors.inputPlaceholder}
+        placeholderTextColor={colors.inputPlaceholder}
         {...props}
         style={[
           {
             fontFamily: Fonts.regular,
             fontSize: ZentraTypography.body.fontSize,
             lineHeight: ZentraTypography.body.lineHeight,
-            color: ZentraColors.title,
-            backgroundColor: ZentraColors.inputBackground,
+            color: colors.title,
+            backgroundColor: colors.inputBackground,
             borderWidth: 1,
-            borderColor: ZentraColors.inputBorder,
+            borderColor: colors.inputBorder,
             borderRadius: 12,
             paddingHorizontal: 16,
             paddingVertical: 14,

@@ -4,7 +4,8 @@ import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, useWindowDimen
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 type AuthScreenLayoutProps = {
   title: string;
@@ -15,18 +16,19 @@ type AuthScreenLayoutProps = {
 
 export function AuthScreenLayout({ title, subtitle, children, footer }: AuthScreenLayoutProps) {
   const { height } = useWindowDimensions();
+  const colors = useThemeColors();
 
   return (
-    <View className="flex-1" style={{ backgroundColor: ZentraColors.background }}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <LinearGradient
-        colors={[...ZentraColors.screenGradient]}
-        locations={[...ZentraColors.screenGradientLocations]}
+        colors={[...colors.screenGradient]}
+        locations={[...colors.screenGradientLocations]}
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          height: height * ZentraColors.screenGradientHeight,
+          height: height * colors.screenGradientHeight,
         }}
       />
 
@@ -40,7 +42,7 @@ export function AuthScreenLayout({ title, subtitle, children, footer }: AuthScre
             <View className="mb-8 flex-row items-center">
               <Image
                 source={require('@/assets/NexaLogo.png')}
-                style={{ width: 44, height: 44, tintColor: ZentraColors.title }}
+                style={{ width: 44, height: 44, tintColor: colors.title }}
                 resizeMode="contain"
               />
               <Text
@@ -48,7 +50,7 @@ export function AuthScreenLayout({ title, subtitle, children, footer }: AuthScre
                   fontFamily: Fonts.semibold,
                   fontSize: ZentraTypography.brand.fontSize,
                   lineHeight: ZentraTypography.brand.lineHeight,
-                  color: ZentraColors.title,
+                  color: colors.title,
                   marginLeft: 10,
                 }}>
                 Nexa
@@ -61,7 +63,7 @@ export function AuthScreenLayout({ title, subtitle, children, footer }: AuthScre
                 fontSize: ZentraTypography.title.fontSize,
                 lineHeight: ZentraTypography.title.lineHeight,
                 letterSpacing: ZentraTypography.title.letterSpacing,
-                color: ZentraColors.title,
+                color: colors.title,
               }}>
               {title}
             </Text>
@@ -71,7 +73,7 @@ export function AuthScreenLayout({ title, subtitle, children, footer }: AuthScre
                 fontFamily: Fonts.regular,
                 fontSize: ZentraTypography.body.fontSize,
                 lineHeight: ZentraTypography.body.lineHeight,
-                color: ZentraColors.body,
+                color: colors.body,
                 marginTop: 12,
               }}>
               {subtitle}

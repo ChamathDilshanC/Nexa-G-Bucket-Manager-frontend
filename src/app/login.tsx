@@ -9,7 +9,7 @@ import { AuthFooterLink } from '@/components/auth/auth-footer-link';
 import { AuthGoogleButton } from '@/components/auth/auth-google-button';
 import { AuthInput } from '@/components/auth/auth-input';
 import { AuthScreenLayout } from '@/components/auth/auth-screen-layout';
-import { ZentraColors } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 import { useAuth } from '@/contexts/auth-context';
 import { signInWithEmail, signInWithGoogle } from '@/services/auth';
 
@@ -20,6 +20,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const colors = useThemeColors();
 
   async function handleEmailSignIn() {
     try {
@@ -60,7 +61,7 @@ export default function LoginScreen() {
       }>
       {loading ? (
         <View className="mb-4 items-center">
-          <ActivityIndicator color={ZentraColors.accent} />
+          <ActivityIndicator color={colors.accent} />
         </View>
       ) : null}
 

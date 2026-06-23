@@ -2,7 +2,8 @@ import { AntDesign } from '@expo/vector-icons';
 import { Pressable, Text } from 'react-native';
 
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 type AuthGoogleButtonProps = {
   label?: string;
@@ -15,30 +16,29 @@ export function AuthGoogleButton({
   onPress,
   disabled = false,
 }: AuthGoogleButtonProps) {
+  const colors = useThemeColors();
+
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      className="active:opacity-80"
+      className="flex-row items-center justify-center active:opacity-90"
       style={{
         height: ZentraLayout.buttonHeight,
         borderRadius: ZentraLayout.buttonRadius,
         borderWidth: 1,
-        borderColor: ZentraColors.inputBorder,
-        backgroundColor: ZentraColors.inputBackground,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
+        borderColor: colors.inputBorder,
+        backgroundColor: colors.inputBackground,
         opacity: disabled ? 0.6 : 1,
       }}>
-      <AntDesign name="google" size={18} color={ZentraColors.title} />
+      <AntDesign name="google" size={18} color={colors.title} />
       <Text
         style={{
-          fontFamily: Fonts.semibold,
+          fontFamily: Fonts.medium,
           fontSize: ZentraTypography.button.fontSize,
           lineHeight: ZentraTypography.button.lineHeight,
-          color: ZentraColors.title,
+          color: colors.title,
+          marginLeft: 10,
         }}>
         {label}
       </Text>

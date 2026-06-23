@@ -4,19 +4,21 @@ import { Fragment } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppIcon, type AppIconName, AppIcons } from '@/components/ui/app-icon';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors } from '@/constants/zentra-theme';
+import { useTheme } from '@/contexts/theme-context';
 
 export const GLASS_TAB_BAR_HEIGHT = 64;
 export const GLASS_TAB_BAR_BOTTOM_OFFSET = 14;
 
-const TAB_GAP = 28;
-const TAB_BUTTON_WIDTH = 118;
+const TAB_GAP = 18;
+const TAB_BUTTON_WIDTH = 96;
 const TAB_BUTTON_HEIGHT = 48;
 
-const TAB_ICONS: Record<string, string> = {
-  index: '☁️',
-  settings: '⚙️',
+const TAB_ICONS: Record<string, AppIconName> = {
+  index: AppIcons.cloud,
+  shared: AppIcons.link,
+  settings: AppIcons.settings,
 };
 
 export function useGlassTabBarInset(extra = 16) {
@@ -26,19 +28,21 @@ export function useGlassTabBarInset(extra = 16) {
 
 export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { colors, resolvedColorScheme } = useTheme();
+  const blurTint = resolvedColorScheme === 'dark' ? 'dark' : 'light';
 
   return (
     <View
       pointerEvents="box-none"
       style={[styles.wrapper, { paddingBottom: insets.bottom + GLASS_TAB_BAR_BOTTOM_OFFSET }]}>
-      <View style={styles.barShell}>
+      <View style={[styles.barShell, { borderColor: colors.tabBarBorder }]}>
         <BlurView
           intensity={Platform.OS === 'ios' ? 88 : 72}
-          tint="dark"
+          tint={blurTint}
           style={StyleSheet.absoluteFillObject}
         />
-        <View style={styles.glassTint} />
-        <View style={styles.glassHighlight} />
+        <View style={[styles.glassTint, { backgroundColor: colors.tabBarTint }]} />
+        <View style={[styles.glassHighlight, { backgroundColor: colors.tabBarHighlight }]} />
 
         <View style={styles.tabsRow}>
           {state.routes.map((route, index) => {
@@ -48,7 +52,7 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
                 ? options.tabBarLabel
                 : (options.title ?? route.name);
             const isFocused = state.index === index;
-            const color = isFocused ? ZentraColors.accent : ZentraColors.body;
+            const color = isFocused ? colors.accent : colors.body;
 
             const onPress = () => {
               const event = navigation.emit({
@@ -80,12 +84,26 @@ export function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProp
                   onLongPress={onLongPress}
                   style={({ pressed }) => [
                     styles.tabButton,
-                    isFocused && styles.tabButtonActive,
+                    isFocused && {
+                      backgroundColor:
+                        resolvedColorScheme === 'dark'
+                          ? 'rgba(47, 128, 237, 0.18)'
+                          : 'rgba(37, 99, 235, 0.12)',
+                      borderWidth: 1,
+                      borderColor:
+                        resolvedColorScheme === 'dark'
+                          ? 'rgba(47, 128, 237, 0.28)'
+                          : 'rgba(37, 99, 235, 0.22)',
+                    },
                     pressed && styles.tabButtonPressed,
                   ]}>
                   <View style={styles.tabContent}>
                     <View style={styles.iconWrap}>
-                      <Text style={[styles.tabIcon, { color }]}>{TAB_ICONS[route.name] ?? '•'}</Text>
+                      <AppIcon
+                        name={TAB_ICONS[route.name] ?? 'ellipse-outline'}
+                        size={20}
+                        color={color}
+                      />
                     </View>
                     <Text style={[styles.tabLabel, { color }]} numberOfLines={1} ellipsizeMode="tail">
                       {label}
@@ -116,11 +134,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
     height: GLASS_TAB_BAR_HEIGHT,
-    minWidth: TAB_BUTTON_WIDTH * 2 + TAB_GAP + 24,
+    minWidth: TAB_BUTTON_WIDTH * 3 + TAB_GAP * 2 + 24,
     borderRadius: 32,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
     paddingHorizontal: 12,
     paddingVertical: 8,
     ...Platform.select({
@@ -138,7 +155,6 @@ const styles = StyleSheet.create({
   },
   glassTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(18, 18, 18, 0.42)',
   },
   glassHighlight: {
     position: 'absolute',
@@ -146,7 +162,6 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
   },
   tabsRow: {
     flexDirection: 'row',
@@ -167,11 +182,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     flexShrink: 0,
   },
-  tabButtonActive: {
-    backgroundColor: 'rgba(47, 128, 237, 0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(47, 128, 237, 0.28)',
-  },
   tabButtonPressed: {
     opacity: 0.82,
   },
@@ -186,18 +196,6 @@ const styles = StyleSheet.create({
     height: 22,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tabIcon: {
-    fontSize: 18,
-    lineHeight: 22,
-    textAlign: 'center',
-    ...Platform.select({
-      android: {
-        includeFontPadding: false,
-        textAlignVertical: 'center',
-      },
-      default: {},
-    }),
   },
   tabLabel: {
     marginTop: 2,

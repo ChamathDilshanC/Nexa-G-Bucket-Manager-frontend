@@ -1,7 +1,8 @@
 import { Pressable, Text, View } from 'react-native';
 
+import { AppIcon, AppIcons } from '@/components/ui/app-icon';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 import type { Bucket } from '@/types/bucket';
 import { formatDate } from '@/utils/format';
 
@@ -9,18 +10,21 @@ type BucketCardProps = {
   bucket: Bucket;
   fileCount?: number;
   onPress: () => void;
+  onShare?: () => void;
   onLongPress?: () => void;
 };
 
-export function BucketCard({ bucket, fileCount, onPress, onLongPress }: BucketCardProps) {
+export function BucketCard({ bucket, fileCount, onPress, onShare, onLongPress }: BucketCardProps) {
+  const colors = useThemeColors();
+
   return (
     <Pressable
       onPress={onPress}
       onLongPress={onLongPress}
       style={({ pressed }) => ({
-        backgroundColor: ZentraColors.card,
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: ZentraColors.cardBorder,
+        borderColor: colors.cardBorder,
         borderRadius: 16,
         padding: 14,
         marginBottom: 0,
@@ -34,7 +38,7 @@ export function BucketCard({ bucket, fileCount, onPress, onLongPress }: BucketCa
               fontFamily: Fonts.semibold,
               fontSize: 16,
               lineHeight: 22,
-              color: ZentraColors.title,
+              color: colors.title,
             }}>
             {bucket.display_name}
           </Text>
@@ -43,28 +47,48 @@ export function BucketCard({ bucket, fileCount, onPress, onLongPress }: BucketCa
               fontFamily: Fonts.regular,
               fontSize: 12,
               lineHeight: 18,
-              color: ZentraColors.muted,
+              color: colors.muted,
               marginTop: 2,
             }}>
             {bucket.public ? 'Public bucket' : 'Private bucket'}
           </Text>
         </View>
-        <View
-          style={{
-            backgroundColor: ZentraColors.surface,
-            borderRadius: 10,
-            paddingHorizontal: 8,
-            paddingVertical: 4,
-          }}>
-          <Text
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {onShare ? (
+            <Pressable
+              onPress={(event) => {
+                event.stopPropagation();
+                onShare();
+              }}
+              hitSlop={8}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                backgroundColor: colors.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <AppIcon name={AppIcons.share} size={16} color={colors.accent} />
+            </Pressable>
+          ) : null}
+          <View
             style={{
-              fontFamily: Fonts.semibold,
-              fontSize: 11,
-              lineHeight: 16,
-              color: ZentraColors.accent,
+              backgroundColor: colors.surface,
+              borderRadius: 10,
+              paddingHorizontal: 8,
+              paddingVertical: 4,
             }}>
-            {fileCount ?? '—'} file{fileCount === 1 ? '' : 's'}
-          </Text>
+            <Text
+              style={{
+                fontFamily: Fonts.semibold,
+                fontSize: 11,
+                lineHeight: 16,
+                color: colors.accent,
+              }}>
+              {fileCount ?? '—'} file{fileCount === 1 ? '' : 's'}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -73,7 +97,7 @@ export function BucketCard({ bucket, fileCount, onPress, onLongPress }: BucketCa
           fontFamily: Fonts.regular,
           fontSize: 11,
           lineHeight: 16,
-          color: ZentraColors.body,
+          color: colors.body,
           marginTop: 10,
         }}>
         Created {formatDate(bucket.created_at)}

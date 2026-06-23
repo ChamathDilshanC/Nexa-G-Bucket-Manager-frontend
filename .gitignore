@@ -42,3 +42,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# local export / test artifacts
+.tmp-export-test/
+
+# editor / IDE
+.cursor/
+.vscode/
+.claude/

@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 type SectionTitleProps = {
   title: string;
@@ -9,6 +9,8 @@ type SectionTitleProps = {
 };
 
 export function SectionTitle({ title, subtitle }: SectionTitleProps) {
+  const colors = useThemeColors();
+
   return (
     <View style={{ marginBottom: 14, marginTop: 2 }}>
       <Text
@@ -16,7 +18,7 @@ export function SectionTitle({ title, subtitle }: SectionTitleProps) {
           fontFamily: Fonts.semibold,
           fontSize: 16,
           lineHeight: 22,
-          color: ZentraColors.title,
+          color: colors.title,
         }}>
         {title}
       </Text>
@@ -26,7 +28,7 @@ export function SectionTitle({ title, subtitle }: SectionTitleProps) {
             fontFamily: Fonts.regular,
             fontSize: 12,
             lineHeight: 18,
-            color: ZentraColors.muted,
+            color: colors.muted,
             marginTop: 2,
           }}>
           {subtitle}

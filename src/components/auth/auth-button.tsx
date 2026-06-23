@@ -2,7 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, Text } from 'react-native';
 
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 type AuthButtonProps = {
   label: string;
@@ -11,6 +12,8 @@ type AuthButtonProps = {
 };
 
 export function AuthButton({ label, onPress, disabled = false }: AuthButtonProps) {
+  const colors = useThemeColors();
+
   return (
     <Pressable
       onPress={onPress}
@@ -18,7 +21,7 @@ export function AuthButton({ label, onPress, disabled = false }: AuthButtonProps
       className="mt-2 overflow-hidden active:opacity-90"
       style={{ borderRadius: ZentraLayout.buttonRadius, opacity: disabled ? 0.6 : 1 }}>
       <LinearGradient
-        colors={[ZentraColors.buttonStart, ZentraColors.buttonEnd]}
+        colors={[colors.buttonStart, colors.buttonEnd]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={{
@@ -32,7 +35,7 @@ export function AuthButton({ label, onPress, disabled = false }: AuthButtonProps
             fontFamily: Fonts.semibold,
             fontSize: ZentraTypography.button.fontSize,
             lineHeight: ZentraTypography.button.lineHeight,
-            color: ZentraColors.title,
+            color: '#FFFFFF',
           }}>
           {label}
         </Text>

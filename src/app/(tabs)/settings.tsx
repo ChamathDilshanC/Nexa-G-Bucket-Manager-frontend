@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ErrorBanner, LoadingState } from '@/components/dashboard/empty-state';
-import { AppScreen, ScreenHeader } from '@/components/dashboard/screen-header';
-import { SectionTitle } from '@/components/dashboard/section-title';
-import { SignOutButton } from '@/components/dashboard/sign-out-button';
+import { ThemeSegmentedControl } from '@/components/settings/theme-segmented-control';
+import { AppIcon, type AppIconName, AppIcons } from '@/components/ui/app-icon';
 import { useGlassTabBarInset } from '@/components/navigation/glass-tab-bar';
 import { useAuth } from '@/contexts/auth-context';
+import { useTheme, useThemeColors } from '@/contexts/theme-context';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout } from '@/constants/zentra-theme';
+import type { ThemePalette } from '@/constants/zentra-theme';
 import { getAuthenticatedUser } from '@/services/api';
 import { ApiError } from '@/services/api';
 import type { AuthUserProfile } from '@/types/bucket';
@@ -19,44 +20,122 @@ function getInitials(email?: string | null) {
   return letter || '?';
 }
 
-function truncateMiddle(value: string, max = 22) {
+function truncateMiddle(value: string, max = 28) {
   if (value.length <= max) return value;
-  return `${value.slice(0, 10)}…${value.slice(-8)}`;
+  return `${value.slice(0, 12)}…${value.slice(-10)}`;
 }
 
-type InfoRowProps = {
-  icon: string;
+type SettingsRowProps = {
+  icon: AppIconName;
   label: string;
   value: string;
+  colors: ThemePalette;
+  onPress?: () => void;
   isLast?: boolean;
+  valueColor?: string;
 };
 
-function InfoRow({ icon, label, value, isLast = false }: InfoRowProps) {
-  return (
-    <View style={[styles.infoRow, !isLast && styles.infoRowBorder]}>
-      <View style={styles.infoLeft}>
-        <View style={styles.infoIconWrap}>
-          <Text style={styles.infoIcon}>{icon}</Text>
-        </View>
-        <Text style={styles.infoLabel}>{label}</Text>
+function SettingsRow({
+  icon,
+  label,
+  value,
+  colors,
+  onPress,
+  isLast = false,
+  valueColor,
+}: SettingsRowProps) {
+  const rowInner = (
+    <View style={styles.settingsRowInner}>
+      <View style={styles.settingsIconWrap}>
+        <AppIcon name={icon} size={22} />
       </View>
-      <Text style={styles.infoValue} numberOfLines={1}>
-        {value}
-      </Text>
+
+      <View style={styles.settingsCopy}>
+        <Text style={{ fontFamily: Fonts.regular, fontSize: 12, color: colors.body }}>{label}</Text>
+        <Text
+          numberOfLines={1}
+          style={{
+            marginTop: 2,
+            fontFamily: Fonts.medium,
+            fontSize: 16,
+            color: valueColor ?? colors.title,
+          }}>
+          {value}
+        </Text>
+      </View>
+
+      <AppIcon name={AppIcons.chevronForward} size={18} color={colors.muted} />
     </View>
   );
+
+  const borderStyle = !isLast
+    ? { borderBottomWidth: 1, borderBottomColor: colors.borderSubtle }
+    : null;
+
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.settingsRowPressable, borderStyle, pressed && styles.pressed]}>
+        {rowInner}
+      </Pressable>
+    );
+  }
+
+  return <View style={[styles.settingsRowPressable, borderStyle]}>{rowInner}</View>;
 }
 
-function LimitChip({ label }: { label: string }) {
+const styles = StyleSheet.create({
+  settingsRowPressable: {
+    width: '100%',
+  },
+  settingsRowInner: {
+    width: '100%',
+    minHeight: 68,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  settingsIconWrap: {
+    marginRight: 12,
+    height: 36,
+    width: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsCopy: {
+    minWidth: 0,
+    flex: 1,
+    paddingRight: 12,
+  },
+  pressed: {
+    opacity: 0.8,
+  },
+});
+
+function SectionHeading({ title, colors }: { title: string; colors: ThemePalette }) {
   return (
-    <View style={styles.limitChip}>
-      <Text style={styles.limitChipText}>{label}</Text>
-    </View>
+    <Text
+      style={{
+        marginBottom: 8,
+        marginTop: 24,
+        textAlign: 'center',
+        fontFamily: Fonts.regular,
+        fontSize: 12,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        color: colors.body,
+      }}>
+      {title}
+    </Text>
   );
 }
 
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
+  const { themePreference, setThemePreference } = useTheme();
+  const colors = useThemeColors();
   const [profile, setProfile] = useState<AuthUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +144,16 @@ export default function SettingsScreen() {
   const email = profile?.email ?? user?.email ?? '—';
   const userId = profile?.user_id ?? user?.id ?? '—';
   const role = profile?.role ?? 'authenticated';
-  const signInMethod = profile?.is_google_user ? 'Google' : profile?.provider ?? 'Email';
+  const signInMethod = profile?.is_google_user
+    ? 'Google'
+    : (profile?.provider ?? 'email').toLowerCase();
+
+  const themeLabel =
+    themePreference === 'system'
+      ? 'System default'
+      : themePreference === 'light'
+        ? 'Light'
+        : 'Dark';
 
   useEffect(() => {
     void (async () => {
@@ -96,233 +184,162 @@ export default function SettingsScreen() {
   }
 
   return (
-    <AppScreen header={<ScreenHeader title="Settings" subtitle="Manage your account and app preferences" />}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <ScrollView
-        style={styles.scroll}
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarInset }]}>
-        {error ? <ErrorBanner message={error} /> : null}
+        contentContainerStyle={{ paddingBottom: tabBarInset }}>
+        <Text
+          style={{
+            paddingTop: 8,
+            textAlign: 'center',
+            fontFamily: Fonts.semibold,
+            fontSize: 18,
+            color: colors.title,
+          }}>
+          Settings
+        </Text>
+
+        {error ? (
+          <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+            <ErrorBanner message={error} />
+          </View>
+        ) : null}
 
         {loading ? (
           <LoadingState />
         ) : (
           <>
-            <View style={styles.profileCard}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{getInitials(email)}</Text>
-              </View>
-              <View style={styles.profileCopy}>
-                <Text style={styles.profileEmail} numberOfLines={1}>
-                  {email}
-                </Text>
-                <View style={styles.providerBadge}>
-                  <Text style={styles.providerBadgeText}>{signInMethod} account</Text>
+            <View style={{ alignItems: 'center', paddingBottom: 32, paddingTop: 24 }}>
+              <View style={{ position: 'relative' }}>
+                <View
+                  style={{
+                    height: 112,
+                    width: 112,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 56,
+                    borderWidth: 1,
+                    borderColor: colors.cardBorder,
+                    backgroundColor: colors.cardMuted,
+                  }}>
+                  <Text style={{ fontFamily: Fonts.bold, fontSize: 36, color: colors.title }}>
+                    {getInitials(email)}
+                  </Text>
                 </View>
+
+                <Pressable
+                  accessibilityLabel="Edit profile"
+                  onPress={() => undefined}
+                  style={{
+                    position: 'absolute',
+                    bottom: -4,
+                    right: -4,
+                    height: 36,
+                    width: 36,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: colors.cardBorder,
+                    backgroundColor: colors.surface,
+                  }}>
+                  <AppIcon name={AppIcons.edit} size={16} color={colors.accent} />
+                </Pressable>
               </View>
             </View>
 
-            <SectionTitle title="Account" subtitle="Your profile details" />
-            <View style={styles.card}>
-              <InfoRow icon="✉️" label="Email" value={email} />
-              <InfoRow icon="🆔" label="User ID" value={truncateMiddle(userId, 26)} />
-              <InfoRow icon="👤" label="Role" value={role} />
-              <InfoRow icon="🔐" label="Sign-in" value={signInMethod} isLast />
-            </View>
+            <View
+              style={{
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                backgroundColor: colors.backgroundElevated,
+                paddingHorizontal: 4,
+                paddingBottom: 24,
+                paddingTop: 16,
+              }}>
+              <SectionHeading title="Appearance" colors={colors} />
 
-            <SectionTitle title="Storage" subtitle="Upload limits and supported formats" />
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>File upload rules</Text>
-              <Text style={styles.cardBody}>
-                Keep uploads within these limits for the best experience across all your buckets.
-              </Text>
-
-              <View style={styles.limitRow}>
-                <LimitChip label="50 MB max" />
-                <LimitChip label="JPEG" />
-                <LimitChip label="PNG" />
-                <LimitChip label="PDF" />
+              <View
+                style={{
+                  overflow: 'hidden',
+                  borderRadius: 16,
+                  backgroundColor: colors.card,
+                  paddingHorizontal: 20,
+                  paddingVertical: 16,
+                }}>
+                <View style={{ marginBottom: 12, flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ marginRight: 12, height: 36, width: 36, alignItems: 'center', justifyContent: 'center' }}>
+                    <AppIcon name={AppIcons.phonePortrait} size={22} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: Fonts.regular, fontSize: 12, color: colors.body }}>Theme</Text>
+                    <Text style={{ marginTop: 2, fontFamily: Fonts.medium, fontSize: 16, color: colors.title }}>
+                      {themeLabel}
+                    </Text>
+                  </View>
+                </View>
+                <ThemeSegmentedControl
+                  value={themePreference}
+                  onChange={setThemePreference}
+                />
               </View>
-            </View>
 
-            <View style={styles.dangerSection}>
-              <SectionTitle title="Session" subtitle="Sign out from this device" />
-              <View style={styles.sessionCard}>
-                <Text style={styles.sessionHint}>
-                  You will need to sign in again to access your buckets and files.
-                </Text>
-                <SignOutButton onPress={confirmSignOut} />
+              <SectionHeading title="Account info" colors={colors} />
+
+              <View style={{ overflow: 'hidden', borderRadius: 16, backgroundColor: colors.card }}>
+                <SettingsRow colors={colors} icon={AppIcons.mail} label="Email address" value={email} />
+                <SettingsRow
+                  colors={colors}
+                  icon={AppIcons.idCard}
+                  label="User ID"
+                  value={truncateMiddle(userId, 30)}
+                />
+                <SettingsRow colors={colors} icon={AppIcons.shield} label="Role" value={role} />
+                <SettingsRow
+                  colors={colors}
+                  icon={AppIcons.key}
+                  label="Sign-in method"
+                  value={signInMethod}
+                  isLast
+                />
+              </View>
+
+              <SectionHeading title="Storage & Uploads" colors={colors} />
+
+              <View style={{ overflow: 'hidden', borderRadius: 16, backgroundColor: colors.card }}>
+                <SettingsRow
+                  colors={colors}
+                  icon={AppIcons.cloudUpload}
+                  label="Max upload size"
+                  value="50 MB max"
+                />
+                <SettingsRow
+                  colors={colors}
+                  icon={AppIcons.images}
+                  label="Supported formats"
+                  value="JPEG, PNG, PDF"
+                  isLast
+                />
+              </View>
+
+              <SectionHeading title="Session" colors={colors} />
+
+              <View style={{ overflow: 'hidden', borderRadius: 16, backgroundColor: colors.card }}>
+                <SettingsRow
+                  colors={colors}
+                  icon={AppIcons.logOut}
+                  label="Log out"
+                  value="Sign out from this device"
+                  valueColor={colors.danger}
+                  onPress={confirmSignOut}
+                  isLast
+                />
               </View>
             </View>
           </>
         )}
       </ScrollView>
-    </AppScreen>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: ZentraLayout.horizontalPadding,
-    paddingTop: 4,
-  },
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: ZentraColors.card,
-    borderWidth: 1,
-    borderColor: ZentraColors.cardBorder,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 28,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: 'rgba(47, 128, 237, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(47, 128, 237, 0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  avatarText: {
-    fontFamily: Fonts.bold,
-    fontSize: 22,
-    lineHeight: 28,
-    color: ZentraColors.accent,
-  },
-  profileCopy: {
-    flex: 1,
-  },
-  profileEmail: {
-    fontFamily: Fonts.semibold,
-    fontSize: 16,
-    lineHeight: 22,
-    color: ZentraColors.title,
-  },
-  providerBadge: {
-    alignSelf: 'flex-start',
-    marginTop: 8,
-    backgroundColor: ZentraColors.surface,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: ZentraColors.cardBorder,
-  },
-  providerBadgeText: {
-    fontFamily: Fonts.medium,
-    fontSize: 11,
-    lineHeight: 14,
-    color: ZentraColors.body,
-  },
-  card: {
-    backgroundColor: ZentraColors.card,
-    borderWidth: 1,
-    borderColor: ZentraColors.cardBorder,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    marginBottom: 28,
-  },
-  cardTitle: {
-    fontFamily: Fonts.semibold,
-    fontSize: 15,
-    lineHeight: 22,
-    color: ZentraColors.title,
-    marginTop: 12,
-    marginBottom: 6,
-  },
-  cardBody: {
-    fontFamily: Fonts.regular,
-    fontSize: 13,
-    lineHeight: 20,
-    color: ZentraColors.body,
-    marginBottom: 14,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-  },
-  infoRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: ZentraColors.cardBorder,
-  },
-  infoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    paddingRight: 12,
-  },
-  infoIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: ZentraColors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  infoIcon: {
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  infoLabel: {
-    fontFamily: Fonts.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: ZentraColors.body,
-  },
-  infoValue: {
-    fontFamily: Fonts.medium,
-    fontSize: 13,
-    lineHeight: 18,
-    color: ZentraColors.title,
-    maxWidth: '46%',
-    textAlign: 'right',
-  },
-  limitRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 12,
-  },
-  limitChip: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: ZentraColors.surface,
-    borderWidth: 1,
-    borderColor: ZentraColors.cardBorder,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  limitChipText: {
-    fontFamily: Fonts.medium,
-    fontSize: 12,
-    lineHeight: 16,
-    color: ZentraColors.accent,
-  },
-  dangerSection: {
-    marginBottom: 8,
-  },
-  sessionCard: {
-    backgroundColor: ZentraColors.card,
-    borderWidth: 1,
-    borderColor: ZentraColors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-  },
-  sessionHint: {
-    fontFamily: Fonts.regular,
-    fontSize: 13,
-    lineHeight: 20,
-    color: ZentraColors.body,
-    marginBottom: 16,
-  },
-});

@@ -2,8 +2,10 @@ import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/ui/app-icon';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 type ScreenHeaderProps = {
   title: string;
@@ -13,6 +15,8 @@ type ScreenHeaderProps = {
 };
 
 export function ScreenHeader({ title, subtitle, onBack, rightAction }: ScreenHeaderProps) {
+  const colors = useThemeColors();
+
   return (
     <View
       style={{
@@ -29,14 +33,14 @@ export function ScreenHeader({ title, subtitle, onBack, rightAction }: ScreenHea
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: ZentraColors.card,
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: ZentraColors.cardBorder,
+                borderColor: colors.cardBorder,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 12,
               }}>
-              <Text style={{ color: ZentraColors.title, fontSize: 18 }}>←</Text>
+              <AppIcon name="chevron-back" size={22} color={colors.title} />
             </Pressable>
           ) : null}
           <View style={{ flex: 1 }}>
@@ -45,7 +49,7 @@ export function ScreenHeader({ title, subtitle, onBack, rightAction }: ScreenHea
                 fontFamily: Fonts.bold,
                 fontSize: 28,
                 lineHeight: 34,
-                color: ZentraColors.title,
+                color: colors.title,
               }}>
               {title}
             </Text>
@@ -55,7 +59,7 @@ export function ScreenHeader({ title, subtitle, onBack, rightAction }: ScreenHea
                   fontFamily: Fonts.regular,
                   fontSize: ZentraTypography.body.fontSize,
                   lineHeight: ZentraTypography.body.lineHeight,
-                  color: ZentraColors.body,
+                  color: colors.body,
                   marginTop: 4,
                 }}>
                 {subtitle}
@@ -75,8 +79,10 @@ type AppScreenProps = {
 };
 
 export function AppScreen({ children, header }: AppScreenProps) {
+  const colors = useThemeColors();
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: ZentraColors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {header}
       {children}
     </SafeAreaView>

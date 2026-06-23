@@ -16,9 +16,13 @@ import {
 import { EmptyState, ErrorBanner, LoadingState } from '@/components/dashboard/empty-state';
 import { FileRow } from '@/components/dashboard/file-row';
 import { AppScreen, ScreenHeader } from '@/components/dashboard/screen-header';
+import { ShareSheetModal } from '@/components/share/share-sheet-modal';
+import { AppIcons } from '@/components/ui/app-icon';
 import { SectionTitle } from '@/components/dashboard/section-title';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout } from '@/constants/zentra-theme';
+import { ZentraLayout } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
+import { useAuth } from '@/contexts/auth-context';
 import {
   getCachedFiles,
   invalidateBucketsCache,
@@ -38,6 +42,7 @@ import { ALLOWED_MIME_TYPES, MAX_UPLOAD_SIZE_BYTES, type StorageFile } from '@/t
 
 export default function BucketDetailScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const params = useLocalSearchParams<{ name: string; displayName?: string }>();
   const bucketName = params.name;
   const displayName = params.displayName ?? bucketName;
@@ -48,6 +53,8 @@ export default function BucketDetailScreen() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewVersion, setPreviewVersion] = useState(0);
+  const [shareVisible, setShareVisible] = useState(false);
+  const colors = useThemeColors();
 
   const loadFiles = useCallback(
     async (isRefresh = false) => {
@@ -212,6 +219,22 @@ export default function BucketDetailScreen() {
           title={displayName}
           subtitle={`${files.length} file${files.length === 1 ? '' : 's'} in this bucket`}
           onBack={() => router.back()}
+          rightAction={
+            <Pressable
+              onPress={() => setShareVisible(true)}
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.cardBorder,
+                borderRadius: 999,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+              }}>
+              <Text style={{ fontFamily: Fonts.semibold, fontSize: 14, color: colors.title }}>
+                Share
+              </Text>
+            </Pressable>
+          }
         />
       }>
       <View style={{ flex: 1, paddingHorizontal: ZentraLayout.horizontalPadding }}>
@@ -232,7 +255,7 @@ export default function BucketDetailScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={() => loadFiles(true)}
-                tintColor={ZentraColors.accent}
+                tintColor={colors.accent}
               />
             }
             contentContainerStyle={{ paddingBottom: 100, flexGrow: files.length ? 0 : 1 }}
@@ -249,7 +272,7 @@ export default function BucketDetailScreen() {
               <EmptyState
                 title="No files yet"
                 description="Upload JPEG, PNG, or PDF files to this bucket."
-                emoji="📂"
+                icon={AppIcons.folder}
               />
             }
             renderItem={({ item }) => (
@@ -266,16 +289,26 @@ export default function BucketDetailScreen() {
           position: 'absolute',
           right: 24,
           bottom: 32,
-          backgroundColor: ZentraColors.accent,
+          backgroundColor: colors.accent,
           borderRadius: 999,
           paddingHorizontal: 20,
           paddingVertical: 14,
           opacity: uploading ? 0.7 : 1,
         }}>
-        <Text style={{ fontFamily: Fonts.semibold, fontSize: 15, color: ZentraColors.title }}>
+        <Text style={{ fontFamily: Fonts.semibold, fontSize: 15, color: '#FFFFFF' }}>
           {uploading ? 'Uploading...' : '+ Upload'}
         </Text>
       </Pressable>
+
+      {bucketName ? (
+        <ShareSheetModal
+          visible={shareVisible}
+          bucketName={bucketName}
+          displayName={displayName}
+          ownerEmail={user?.email}
+          onClose={() => setShareVisible(false)}
+        />
+      ) : null}
     </AppScreen>
   );
 }

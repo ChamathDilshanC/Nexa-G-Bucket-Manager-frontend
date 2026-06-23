@@ -2,8 +2,9 @@ import { Image } from 'expo-image';
 import { memo, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { AppIcon, type AppIconName, AppIcons } from '@/components/ui/app-icon';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 import {
   getCachedPreviewUrl,
   resolvePreviewUrl,
@@ -17,14 +18,14 @@ type FileRowProps = {
   onPress: () => void;
 };
 
-function getFileEmoji(contentType: string | null, name: string) {
-  if (contentType?.startsWith('image/')) return '🖼️';
-  if (contentType === 'application/pdf') return '📄';
-  if (name.endsWith('.pdf')) return '📄';
-  return '📁';
+function getFileIcon(contentType: string | null, name: string): AppIconName {
+  if (contentType?.startsWith('image/')) return AppIcons.image;
+  if (contentType === 'application/pdf' || name.endsWith('.pdf')) return AppIcons.document;
+  return AppIcons.folderOutline;
 }
 
 function FileRowComponent({ bucketName, file, onPress }: FileRowProps) {
+  const colors = useThemeColors();
   const showImagePreview = isImageFile(file.content_type, file.name);
   const [previewUrl, setPreviewUrl] = useState<string | null>(() =>
     showImagePreview ? getCachedPreviewUrl(bucketName, file.name) : null,
@@ -70,9 +71,9 @@ function FileRowComponent({ bucketName, file, onPress }: FileRowProps) {
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: ZentraColors.card,
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: ZentraColors.cardBorder,
+        borderColor: colors.cardBorder,
         borderRadius: 14,
         padding: 12,
         opacity: pressed ? 0.9 : 1,
@@ -82,7 +83,7 @@ function FileRowComponent({ bucketName, file, onPress }: FileRowProps) {
           width: 56,
           height: 56,
           borderRadius: 12,
-          backgroundColor: ZentraColors.surface,
+          backgroundColor: colors.surface,
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: 14,
@@ -97,9 +98,9 @@ function FileRowComponent({ bucketName, file, onPress }: FileRowProps) {
             recyclingKey={previewUrl}
           />
         ) : showImagePreview && previewLoading ? (
-          <ActivityIndicator size="small" color={ZentraColors.accent} />
+          <ActivityIndicator size="small" color={colors.accent} />
         ) : (
-          <Text style={{ fontSize: 22 }}>{getFileEmoji(file.content_type, file.name)}</Text>
+          <AppIcon name={getFileIcon(file.content_type, file.name)} size={24} color={colors.accent} />
         )}
       </View>
 
@@ -110,7 +111,7 @@ function FileRowComponent({ bucketName, file, onPress }: FileRowProps) {
             fontFamily: Fonts.semibold,
             fontSize: 14,
             lineHeight: 20,
-            color: ZentraColors.title,
+            color: colors.title,
           }}>
           {getFileName(file.name)}
         </Text>
@@ -119,14 +120,14 @@ function FileRowComponent({ bucketName, file, onPress }: FileRowProps) {
             fontFamily: Fonts.regular,
             fontSize: 12,
             lineHeight: 18,
-            color: ZentraColors.body,
+            color: colors.body,
             marginTop: 2,
           }}>
           {getMimeLabel(file.content_type)} · {formatBytes(file.size)}
         </Text>
       </View>
 
-      <Text style={{ color: ZentraColors.muted, fontSize: 18 }}>›</Text>
+      <AppIcon name={AppIcons.chevronForward} size={18} color={colors.muted} />
     </Pressable>
   );
 }

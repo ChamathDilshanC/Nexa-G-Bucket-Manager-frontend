@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { AuthErrorMessage } from '@/components/auth/auth-error-message';
-import { ZentraColors } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 import { useAuth } from '@/contexts/auth-context';
 import { getStoredSession } from '@/lib/session';
 import { completeGoogleSignIn } from '@/services/auth';
@@ -17,6 +17,7 @@ export default function AuthCallbackScreen() {
   const { code } = useLocalSearchParams<{ code?: string | string[] }>();
   const [error, setError] = useState<string | null>(null);
   const handledRef = useRef(false);
+  const colors = useThemeColors();
 
   useEffect(() => {
     if (handledRef.current) return;
@@ -46,11 +47,11 @@ export default function AuthCallbackScreen() {
   }, [code, onAuthSuccess, router]);
 
   return (
-    <View className="flex-1 items-center justify-center bg-black px-6">
+    <View className="flex-1 items-center justify-center bg-app-bg px-6">
       {error ? (
         <AuthErrorMessage message={error} />
       ) : (
-        <ActivityIndicator color={ZentraColors.accent} size="large" />
+        <ActivityIndicator color={colors.accent} size="large" />
       )}
     </View>
   );

@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthFooterLink } from '@/components/auth/auth-footer-link';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors, ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { ZentraLayout, ZentraTypography } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 const HIGHLIGHTS = [
   'All your buckets in one dashboard.',
@@ -16,18 +17,19 @@ const HIGHLIGHTS = [
 export default function GetStartedScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
+  const colors = useThemeColors();
 
   return (
-    <View className="flex-1" style={{ backgroundColor: ZentraColors.background }}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <LinearGradient
-        colors={[...ZentraColors.screenGradient]}
-        locations={[...ZentraColors.screenGradientLocations]}
+        colors={[...colors.screenGradient]}
+        locations={[...colors.screenGradientLocations]}
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          height: height * ZentraColors.screenGradientHeight,
+          height: height * colors.screenGradientHeight,
         }}
       />
 
@@ -36,7 +38,7 @@ export default function GetStartedScreen() {
           <View style={{ marginLeft: -12, marginBottom: 8 }}>
             <Image
               source={require('@/assets/NexaLogo.png')}
-              style={{ width: 100, height: 100, tintColor: ZentraColors.title }}
+              style={{ width: 100, height: 100, tintColor: colors.title }}
               resizeMode="contain"
             />
           </View>
@@ -48,7 +50,7 @@ export default function GetStartedScreen() {
                 fontSize: ZentraTypography.title.fontSize,
                 lineHeight: ZentraTypography.title.lineHeight,
                 letterSpacing: ZentraTypography.title.letterSpacing,
-                color: ZentraColors.title,
+                color: colors.title,
               }}>
               Get Started
             </Text>
@@ -58,7 +60,7 @@ export default function GetStartedScreen() {
                 fontFamily: Fonts.regular,
                 fontSize: ZentraTypography.body.fontSize,
                 lineHeight: ZentraTypography.body.lineHeight,
-                color: ZentraColors.body,
+                color: colors.body,
                 marginTop: 12,
               }}>
               Welcome to Nexa G-Bucket — manage cloud storage simply and securely.
@@ -78,7 +80,7 @@ export default function GetStartedScreen() {
                       fontFamily: Fonts.regular,
                       fontSize: ZentraTypography.bullet.fontSize,
                       lineHeight: ZentraTypography.bullet.lineHeight,
-                      color: ZentraColors.body,
+                      color: colors.body,
                       marginRight: 8,
                       width: 12,
                     }}>
@@ -90,7 +92,7 @@ export default function GetStartedScreen() {
                       fontFamily: Fonts.regular,
                       fontSize: ZentraTypography.bullet.fontSize,
                       lineHeight: ZentraTypography.bullet.lineHeight,
-                      color: ZentraColors.body,
+                      color: colors.body,
                     }}>
                     {text}
                   </Text>
@@ -104,7 +106,7 @@ export default function GetStartedScreen() {
             className="overflow-hidden active:opacity-90"
             style={{ borderRadius: ZentraLayout.buttonRadius, marginTop: 8 }}>
             <LinearGradient
-              colors={[ZentraColors.buttonStart, ZentraColors.buttonEnd]}
+              colors={[colors.buttonStart, colors.buttonEnd]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={{
@@ -118,7 +120,7 @@ export default function GetStartedScreen() {
                   fontFamily: Fonts.semibold,
                   fontSize: ZentraTypography.button.fontSize,
                   lineHeight: ZentraTypography.button.lineHeight,
-                  color: ZentraColors.title,
+                  color: '#FFFFFF',
                 }}>
                 Get Started
               </Text>

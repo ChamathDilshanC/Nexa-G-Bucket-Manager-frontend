@@ -1,29 +1,39 @@
 import { ActivityIndicator, Text, View } from 'react-native';
 
+import { AppIcon, type AppIconName, AppIcons } from '@/components/ui/app-icon';
 import { Fonts } from '@/constants/fonts';
-import { ZentraColors } from '@/constants/zentra-theme';
+import { useThemeColors } from '@/contexts/theme-context';
 
 type EmptyStateProps = {
   title: string;
   description: string;
-  emoji?: string;
+  icon?: AppIconName;
 };
 
-export function EmptyState({ title, description, emoji = '📦' }: EmptyStateProps) {
+export function EmptyState({ title, description, icon = AppIcons.cube }: EmptyStateProps) {
+  const colors = useThemeColors();
+
   return (
-    <View
-      style={{
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 24,
-        paddingVertical: 48,
-      }}>
-      <Text style={{ fontSize: 48, marginBottom: 16 }}>{emoji}</Text>
+    <View className="items-center justify-center px-6 py-12">
+      <View
+        style={{
+          marginBottom: 16,
+          height: 64,
+          width: 64,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 32,
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+          backgroundColor: colors.cardMuted,
+        }}>
+        <AppIcon name={icon} size={32} color={colors.accent} />
+      </View>
       <Text
         style={{
           fontFamily: Fonts.semibold,
           fontSize: 18,
-          color: ZentraColors.title,
+          color: colors.title,
           textAlign: 'center',
         }}>
         {title}
@@ -32,7 +42,7 @@ export function EmptyState({ title, description, emoji = '📦' }: EmptyStatePro
         style={{
           fontFamily: Fonts.regular,
           fontSize: 14,
-          color: ZentraColors.body,
+          color: colors.body,
           textAlign: 'center',
           marginTop: 8,
           lineHeight: 20,
@@ -44,14 +54,18 @@ export function EmptyState({ title, description, emoji = '📦' }: EmptyStatePro
 }
 
 export function LoadingState() {
+  const colors = useThemeColors();
+
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 48 }}>
-      <ActivityIndicator color={ZentraColors.accent} size="large" />
+      <ActivityIndicator color={colors.accent} size="large" />
     </View>
   );
 }
 
 export function ErrorBanner({ message }: { message: string }) {
+  const colors = useThemeColors();
+
   return (
     <View
       style={{
@@ -62,7 +76,7 @@ export function ErrorBanner({ message }: { message: string }) {
         padding: 12,
         marginBottom: 12,
       }}>
-      <Text style={{ fontFamily: Fonts.regular, fontSize: 14, color: ZentraColors.danger }}>{message}</Text>
+      <Text style={{ fontFamily: Fonts.regular, fontSize: 14, color: colors.danger }}>{message}</Text>
     </View>
   );
 }
